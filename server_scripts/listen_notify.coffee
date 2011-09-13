@@ -1,26 +1,18 @@
 pg = require('pg')
-constr = 'pg://ketema:@localhost:5432/ketema'
 
-db = new pg.Client(constr)
+app = require('express').createServer()
 
-db.connect()
-db.on('notification', (notification) ->
-    console.log(notification)
-)
+io = require('socket.io').listen(app)
 
-db.query('LISTEN foo;', (err, result) ->
-    if(err)
-        console.log('Error: ' + err)
+DSN = 'pg://al_the_x:@localhost:5432/al_the_x'
 
-    console.log(result)
-)
+pg.connect DSN, (error, client) ->
+    console.log(error) if error
 
-io = require('socket.io')
-express = require('express')
-app = express.createServer()
-io = io.listen(app)
+    client.query('LISTEN foo')
 
-app.listen(8888)
+    client.on 'notification', ( message ) ->
+        console.log message
 
 io.sockets.on('connection', (socket) ->
     socket.emit('news', { hello: 'world' } )
@@ -28,3 +20,5 @@ io.sockets.on('connection', (socket) ->
         console.log(data)
     )
 )
+
+app.listen(8888)
